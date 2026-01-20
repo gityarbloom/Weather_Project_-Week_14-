@@ -31,7 +31,7 @@ def fetch_hourly_weather(latitude: float, longitude: float):
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": "temperature_2m, wind_speed_10m, relative_humidity_2m",
+        "hourly": "temperature_2m,wind_speed_10m,relative_humidity_2m",
         "past_days": 1,
         "timezone": "UTC"
     }
