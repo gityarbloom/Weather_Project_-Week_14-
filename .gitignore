@@ -1,2 +1,6 @@
 venv/
 .venv
+.idea
+.idea/
+*__pyc__/
+__pyc__/
