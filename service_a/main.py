@@ -11,7 +11,6 @@ def get_the_data_weather(location_name: str):
 
     host_name = os.getenv("SERVICE_B_HOST", "localhost")
     url = f"http://{host_name}:8001/clean"
-    # url = f"http://localhost:8001/clean"
     try:
         response = requests.post(url, json=data_weather)
         response.raise_for_status()
