@@ -42,8 +42,5 @@ def clean_data(data:list[Location]):
     final_dict = df_to_dict(df)
     return final_dict
 
-
-uvicorn.run(app, host="localhost", port=8001)
-
-
-
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=8001)
