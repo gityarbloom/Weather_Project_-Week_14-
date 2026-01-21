@@ -1,6 +1,24 @@
 import pymysql
 from fastapi import FastAPI
 import uvicorn
+from pydantic import BaseModel
+from datetime import datetime
+
+
+app3 = FastAPI()
+
+class Location(BaseModel):
+    timestamp: datetime
+    location_name: str
+    country: str | None
+    latitude: float
+    longitude: float
+    temperature: float
+    wind_speed: float
+    humidity: int
+    temperature_category : str
+    wind_status : str
+
 
 
 class MySQLConnection:
@@ -50,40 +68,47 @@ class MySQLConnection:
         self.conn.commit()
         self.table = table_name
 
-
-    def insert_into(self):
+    def insert_into(self, timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category):
         self.mysqlconnect()
         cur = self.conn.cursor()
-        cur.execute(f"""
-        INSERT INTO locations_table (
-            timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category)
-        VALUES (
-            "18-06-12 10:34:09 AM", "Gateshead", "England", 34.4, 45.6, 67.8, 65.8, 55, "cold", "hell_windy")
-        """)
+        sql_query = f"""
+        INSERT INTO {self.table} (timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (timestamp, location_name, country, latitude, longitude,temperature, wind_speed, humidity, temperature_category, wind_category)
+        cur.execute(sql_query, values)
         self.conn.commit()
+
 
 
     def select_all(self):
         self.mysqlconnect()
         cur = self.conn.cursor()
-        cur.execute("select * from locations_table")
+        cur.execute(f"select * from {self.table}")
         output = cur.fetchall()
+        return output
 
-        for i in output:
-            print(i)
 
     def close_connection(self):
         self.conn.close()
+        self.conn = None
 
+
+
+@app3.post("/test_connection_to_database")
+def test_db(data: list[Location]):
+    dict_version = [l.model_dump(mode='json') for l in data]
+    db_conn = MySQLConnection("localhost", "root", "")
+    db_conn.create_db("project_db")
+    db_conn.create_table("records_weather)")
+    for loc in dict_version:
+        db_conn.insert_into(loc["timestamp"], loc["location_name"], loc["country"], loc["latitude"], loc["longitude"], loc["temperature"], loc["wind_speed"], loc["humidity"], loc["temperature_category"], loc["wind_status"])
+    results = db_conn.select_all()
+    db_conn.close_connection()
+    return {"message" : "Successful"}
 
 if __name__ == "__main__":
-    db_conn = MySQLConnection("localhost", "root", "")
-    db_conn.create_db("locations_db")
-    db_conn.create_table("locations_table")
-    for i in range(20):
-        db_conn.insert_into()
-    db_conn.select_all()
-    db_conn.close_connection()
+    uvicorn.run(app3, host="localhost", port=8002)
 
 
 
