@@ -21,7 +21,7 @@ class MySQLConnection:
                 password=self.password
             )
 
-    def create_locations_db(self, db_name):
+    def create_db(self, db_name):
         self.mysqlconnect()
         cur = self.conn.cursor()
         cur.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
@@ -29,7 +29,7 @@ class MySQLConnection:
         self.conn.commit()
         self.db = db_name
 
-    def create_locations_table(self, table_name):
+    def create_table(self, table_name):
         self.mysqlconnect()
         cur = self.conn.cursor()
         cur.execute(f"""
@@ -51,6 +51,17 @@ class MySQLConnection:
         self.table = table_name
 
 
+    def insert_into(self):
+        self.mysqlconnect()
+        cur = self.conn.cursor()
+        cur.execute(f"""
+        INSERT INTO locations_table (
+            timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category)
+        VALUES (
+            "18-06-12 10:34:09 AM", "Gateshead", "England", 34.4, 45.6, 67.8, 65.8, 55, "cold", "hell_windy")
+        """)
+        self.conn.commit()
+
 
     def select_all(self):
         self.mysqlconnect()
@@ -67,9 +78,10 @@ class MySQLConnection:
 
 if __name__ == "__main__":
     db_conn = MySQLConnection("localhost", "root", "")
-    db_conn.mysqlconnect()
-    db_conn.create_locations_db("locations_db")
-    db_conn.create_locations_table("locations_table")
+    db_conn.create_db("locations_db")
+    db_conn.create_table("locations_table")
+    for i in range(20):
+        db_conn.insert_into()
     db_conn.select_all()
     db_conn.close_connection()
 
