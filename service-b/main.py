@@ -1,40 +1,20 @@
 import pandas as pd
-import numpy as np
 from datetime import datetime
-import datetime
+from fastapi import FastAPI
+from pydantic import BaseModel
+import uvicorn
 
-data = [{'timestamp': datetime.datetime(2026, 1, 19, 0, 0),
-  'location_name': 'London',
-  'country': 'United Kingdom',
-  'latitude': 51.50853,
-  'longitude': -0.12574,
-  'temperature': -24.7,
-  'wind_speed': 3.9,
-  'humidity': 83},
- {'timestamp': datetime.datetime(2026, 1, 19, 1, 0),
-  'location_name': 'London',
-  'country': 'United Kingdom',
-  'latitude': 51.50853,
-  'longitude': -0.12574,
-  'temperature': 18.9,
-  'wind_speed': 3.4,
-  'humidity': 84},
- {'timestamp': datetime.datetime(2026, 1, 19, 2, 0),
-  'location_name': 'London',
-  'country': 'United Kingdom',
-  'latitude': 51.50853,
-  'longitude': -0.12574,
-  'temperature': 25.7,
-  'wind_speed': 10,
-  'humidity': 84},
- {'timestamp': datetime.datetime(2026, 1, 19, 3, 0),
-  'location_name': 'London',
-  'country': 'United Kingdom',
-  'latitude': 51.50853,
-  'longitude': -0.12574,
-  'temperature': 17.9,
-  'wind_speed': 33.87,
-  'humidity': 86}]
+app = FastAPI()
+
+class Location(BaseModel):
+     timestamp : datetime
+     location_name : str
+     country : str
+     latitude : str
+     longitude : float
+     temperature : float
+     wind_speed : float
+     humidity : int
 
 
 def dict_to_df(json_data):
@@ -47,25 +27,23 @@ def add_temperature_category(dataframe):
 
 def add_wind_status(dataframe):
     dataframe["wind_status"] =  dataframe["wind_speed"].apply(lambda x: "windy" if x > 10 else "calm")
+    return dataframe
 
 def df_to_dict(dataframe):
     return dataframe.to_dict("records")
 
-df = dict_to_df(data)
 
-add_temperature_category(df)
-
-add_wind_status(df)
-
-# print(df.dtypes)
-
-dict_version = df_to_dict(df)
-
-my_dict = dict_version[0]
+@app.post("/clean")
+def clean_data(data:list[Location]):
+    dict_version = [l.model_dump() for l in data]
+    df = dict_to_df(dict_version)
+    df = add_temperature_category(df)
+    df = add_wind_status(df)
+    final_dict = df_to_dict(df)
+    return final_dict
 
 
+uvicorn.run(app, host="localhost", port=8000)
 
-print(type(data[0]["timestamp"]))
 
 
-print(type(dict_version[0]["timestamp"]))
