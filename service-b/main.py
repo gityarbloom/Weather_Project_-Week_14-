@@ -9,8 +9,8 @@ app = FastAPI()
 class Location(BaseModel):
      timestamp : datetime
      location_name : str
-     country : str
-     latitude : str
+     country : str | None
+     latitude : float
      longitude : float
      temperature : float
      wind_speed : float
@@ -35,7 +35,7 @@ def df_to_dict(dataframe):
 
 @app.post("/clean")
 def clean_data(data:list[Location]):
-    dict_version = [l.model_dump() for l in data]
+    dict_version = [l.model_dump(mode='json') for l in data]
     df = dict_to_df(dict_version)
     df = add_temperature_category(df)
     df = add_wind_status(df)
@@ -43,7 +43,7 @@ def clean_data(data:list[Location]):
     return final_dict
 
 
-uvicorn.run(app, host="localhost", port=8000)
+uvicorn.run(app, host="localhost", port=8001)
 
 
 
