@@ -62,20 +62,20 @@ class MySQLConnection:
             wind_speed FLOAT,
             humidity INT,
             temperature_category VARCHAR(50) NOT NULL,
-            wind_category VARCHAR(50) NOT NULL
+            wind_status VARCHAR(50) NOT NULL
         )
         """)
         self.conn.commit()
         self.table = table_name
 
-    def insert_into(self, timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category):
+    def insert_into(self, timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_status):
         self.mysqlconnect()
         cur = self.conn.cursor()
         sql_query = f"""
-        INSERT INTO {self.table} (timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_category)
+        INSERT INTO {self.table} (timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_status)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (timestamp, location_name, country, latitude, longitude,temperature, wind_speed, humidity, temperature_category, wind_category)
+        values = (timestamp, location_name, country, latitude, longitude, temperature, wind_speed, humidity, temperature_category, wind_status)
         cur.execute(sql_query, values)
         self.conn.commit()
 
@@ -95,20 +95,31 @@ class MySQLConnection:
 
 
 
-@app3.post("/test_connection_to_database")
-def test_db(data: list[Location]):
+@app3.post("/send_to_database")
+def send_to_db(data: list[Location]):
     dict_version = [l.model_dump(mode='json') for l in data]
     db_conn = MySQLConnection("localhost", "root", "")
     db_conn.create_db("project_db")
-    db_conn.create_table("records_weather)")
+    db_conn.create_table("records_weather")
     for loc in dict_version:
         db_conn.insert_into(loc["timestamp"], loc["location_name"], loc["country"], loc["latitude"], loc["longitude"], loc["temperature"], loc["wind_speed"], loc["humidity"], loc["temperature_category"], loc["wind_status"])
     results = db_conn.select_all()
     db_conn.close_connection()
     return {"message" : "Successful"}
 
-if __name__ == "__main__":
-    uvicorn.run(app3, host="localhost", port=8002)
+
+@app3.post("/retrieve_from_database")
+def retrieve_from_db():
+    db_conn = MySQLConnection("localhost", "root", "")
+    db_conn.create_db("project_db")
+    db_conn.create_table("records_weather")
+    results = db_conn.select_all()
+    db_conn.close_connection()
+    return results
+
+
+
+uvicorn.run(app3, host="localhost", port=8002)
 
 
 

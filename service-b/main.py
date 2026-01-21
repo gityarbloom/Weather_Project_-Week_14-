@@ -1,8 +1,9 @@
 import pandas as pd
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
+import requests
 
 app = FastAPI()
 
@@ -40,7 +41,12 @@ def clean_data(data:list[Location]):
     df = add_temperature_category(df)
     df = add_wind_status(df)
     final_dict = df_to_dict(df)
-    return final_dict
+    url = "http://localhost:8002/send_to_database"
+    try:
+        response = requests.post(url, json=final_dict)
+        return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=e)
 
 
 uvicorn.run(app, host="localhost", port=8001)
