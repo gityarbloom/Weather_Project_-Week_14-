@@ -2,5 +2,5 @@ venv/
 .venv
 .idea
 .idea/
-*__pyc__/
-__pyc__/
+**/__pycache__/
+*.pyc
